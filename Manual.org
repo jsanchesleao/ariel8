@@ -1,0 +1,94 @@
+* Ariel8
+
+Ariel8 is an 8bit virtual machine, written as a study case
+
+Its processor contains 4 registers, each holding 8 bits
+There is a special register called Page, which holds the first 8 bits for all address operations
+Also there is a stack counter holding 8bits
+There are the following flags
+There is the Program Counter, which initializes to 0x0000 and points to an address to read the instructions from
+
+- Last Compare Result (2 bits)
+  - 00: equal
+  - 01: less than
+  - 10: greater than
+  - 11: unset
+- Carry Bit (1 means there is a carry)
+- Negative Bit (1 means there math operations are signed)
+- Overflow Bit (1 means the last math operation was overflown)
+
+** Instruction Set
+
+The instructions are all 16bits, and are constructed as follows
+
+- The first 6 bits are the opcode, so there are 64 possible opcodes
+- The next 2 bits represent which register to operate on.  
+- The last 8 bits are data passed to the operation
+
+*** Instructions
+**** Instruction Table
+| Mnemonic | Instruction                       | OpCode | Register Bits | Data   |
+|----------+-----------------------------------+--------+---------------+--------|
+| SPV      | SET PAGE TO VALUE                 | 000001 | unused        | 8bits  |
+| SPR      | SET PAGE TO REGISTER              | 000010 | 2bits         | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| LDV      | LOAD RAW VALUE                    | 000011 | 2bits         | 8bits  |
+| LDA      | LOAD FROM ADDRESS                 | 000100 | 2bits         | 8bits  |
+| LDR      | LOAD FROM REG VALUE               | 000101 | 2bits         | 2bits  |
+| LRA      | LOAD FROM REG ADDRESS             | 000110 | 2bits         | 2bits  |
+| LPG      | LOAD FROM PAGE REGISTER           | 000111 | 2bits         | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| STV      | STORE RAW VALUE                   | 001000 | 2bits         | 8bits  |
+| STR      | STORE VALUE FROM REG              | 001001 | 2bits         | 2bits  |
+|----------+-----------------------------------+--------+---------------+--------|
+| CPV      | COMPARE REG WITH VALUE            | 001010 | 2bits         | 8bits  |
+| CPR      | COMPARE REG WITH REG              | 001011 | 2bits         | 2bits  |
+|----------+-----------------------------------+--------+---------------+--------|
+| ADV      | ADD VALUE TO REG                  | 001100 | 2bits         | 8bits  |
+| ADR      | ADD REG TO REG                    | 001101 | 2bits         | 2bits  |
+| SBV      | SUBTRACT VALUE FROM REG           | 001110 | 2bits         | 8bits  |
+| SBR      | SUBTRACT REG FROM REG             | 001111 | 2bits         | 2bits  |
+|----------+-----------------------------------+--------+---------------+--------|
+| ANV      | REG AND VALUE                     | 010000 | 2bits         | 8bits  |
+| ANR      | REG AND REG                       | 010001 | 2bits         | 2bits  |
+| ORV      | REG OR VALUE                      | 010010 | 2bits         | 8bits  |
+| ORR      | REG OR REG                        | 010011 | 2bits         | 2bits  |
+| XRV      | REG XOR VALUE                     | 010100 | 2bits         | 8bits  |
+| XRR      | REG XOR REG                       | 010101 | 2bits         | 2bits  |
+|----------+-----------------------------------+--------+---------------+--------|
+| JAL      | JUMP TO ADDRESS IF CMP IS LESS    | 010110 | unused        | 8bits  |
+| JAE      | JUMP TO ADDRESS IF CMP IS EQ      | 010111 | unused        | 8bits  |
+| JAG      | JUMP TO ADDRESS IF CMP IS GREATER | 011000 | unused        | 8bits  |
+| JRL      | JUMP TO REG IF CMP IS LESS        | 011001 | 2bits         | unused |
+| JRE      | JUMP TO REG IF CMP IS EQ          | 011010 | 2bits         | unused |
+| JRG      | JUMP TO REG IF CMP IS GREATER     | 011011 | 2bits         | unused |
+| UJA      | UNCONDITIONAL JUMP TO ADDRESS     | 011100 | unused        | 8bits  |
+| UJR      | UNCONDITIONAL JUMP TO REG         | 011101 | 2bits         | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| PUV      | PUSH VALUE TO STACK               | 011110 | unused        | 8bits  |
+| PUR      | PUSH REGISTER TO STACK            | 011111 | 2bits         | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| POV      | POP VALUE FROM STACK              | 100000 | 2bits         | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| RSC      | RESET CARRY                       | 100001 | unused        | unused |
+|----------+-----------------------------------+--------+---------------+--------|
+| NOP      | NO OPERATION                      | 111110 | unused        | unused |
+| HLT      | HALT                              | 111111 | unused        | unused |
+
+**** Example Instructions
+
+STV R1 F0 - Store the value 0xF0 into register 1 -  00010000 11110000 - 10F0
+
+** Reserved Address Pages
+
+Page 00 is free to use, and should be used to store more transient data
+Page 01 is used by the stack
+Page FF is used in the initialization procedure, and it holds data such as initial Program Counter and important memory pages
+** BUS
+
+The BUS is configured so that there are 0xFFFF addresses available, and they are mapped as follows:
+
+| Component | Start Address | End Address |
+|-----------+---------------+-------------|
+| RAM       | $0000         | $2000       |
+| ROM       | $A000         | $FFFF       |
